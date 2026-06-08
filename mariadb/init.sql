@@ -1,0 +1,43 @@
+USE app_db;
+
+CREATE TABLE users
+(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE orders
+(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    amount DECIMAL(10,2),
+    status VARCHAR(50),
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO users(name,email)
+VALUES
+('Ali','ali@test.com');
+
+INSERT INTO orders(user_id,amount,status)
+VALUES
+(1,'100','pending');
+
+CREATE USER 'debezium'@'%'
+IDENTIFIED BY 'dbz';
+
+GRANT SELECT,
+RELOAD,
+SHOW DATABASES,
+REPLICATION SLAVE,
+REPLICATION CLIENT
+ON *.*
+TO 'debezium'@'%';
+
+FLUSH PRIVILEGES;
