@@ -1,0 +1,5 @@
+mariadb_data/*
+clickhouse_data/*
+user_files/*
+.env
+secrets
