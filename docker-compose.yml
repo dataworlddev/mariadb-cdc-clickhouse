@@ -4,6 +4,9 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    volumes:
+    - zookeeper_data:/var/lib/zookeeper/data
+    - zookeeper_log:/var/lib/zookeeper/log
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -19,6 +22,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+    - kafka_data:/var/lib/kafka/data
 
   mariadb:
     image: mariadb:11
@@ -34,6 +39,8 @@ services:
         "--binlog-format=ROW",
         "--binlog-row-image=FULL"
       ]
+    volumes:
+      - mariadb_data:/var/lib/mysql
 
   clickhouse:
     image: clickhouse/clickhouse-server:24
@@ -42,13 +49,23 @@ services:
       - "9000:9000"
     environment:
       CLICKHOUSE_DB: analytics
-      CLICKHOUSE_USER: admin
-      CLICKHOUSE_PASSWORD: admin123
+    secrets:
+      - clickhouse_credentials
     volumes:
-      - ./clickhouse_data:/var/lib/clickhouse
-      - ./user_files:/var/lib/clickhouse/user_files
+      - clickhouse_data:/var/lib/clickhouse
+      - user_files:/var/lib/clickhouse/user_files
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -a
+        . /run/secrets/clickhouse_credentials
+        set +a
+        exec /entrypoint.sh
+
   tabix:
     image: spoonest/clickhouse-tabix-web-client
+    platform: linux/amd64
     ports:
       - "8080:80"
     depends_on:
@@ -77,3 +94,13 @@ services:
     depends_on:
       - kafka
       - clickhouse
+volumes:
+  kafka_data:
+  zookeeper_data:
+  zookeeper_log:
+  mariadb_data:
+  clickhouse_data:
+  user_files:
+secrets:
+  clickhouse_credentials:
+    file: ./secrets/clickhouse_credentials.secret
